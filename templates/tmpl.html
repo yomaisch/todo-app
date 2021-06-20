@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>ToDo App</title>
+    </head>
+    <body>
+        <h1>ToDo App</h1>
+        <form action="/create" method="POST">
+            <input type="text" name="task">
+            <input type="submit" value="送信">
+        </form>
+        {{.}}
+    </body>
+</html>
