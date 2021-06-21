@@ -3,9 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"log"
-	"net/http"
 
 	_ "github.com/lib/pq"
 )
@@ -30,28 +28,25 @@ type Todo struct {
 
 func main() {
 	// テンプレートの生成
-	http.HandleFunc("/", index)
-	http.HandleFunc("/", create)
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal("ListenAndServe:", err)
-	}
+	// http.HandleFunc("/", index)
+
+	// if err := http.ListenAndServe(":8080", nil); err != nil {
+	// 	log.Fatal("ListenAndServe:", err)
+	// }
 
 	// 試しにDBにサンプルデータを入れ込む
-	t := Todo{Task: "second ch"}
+	t := Todo{Task: "621"}
 	t.Create()
 }
 
-func (t *Todo) create((w http.ResponseWriter, r *http.Request)) (err error) {
+func (t *Todo) Create() (err error) {
 	psqlInfo := "host=localhost user=YoshimasaIshino password=yonce dbname=yonce port=5432 sslmode=disable"
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	t, _ := template.ParseFiles("templates/tmpl.html")
-	t.Execute(w, )
-
-	statement := "INSERT INTO test.todoapp(task) VALUES($1) RETURNING id"
+	statement := "INSERT INTO test.todoapp(id, task) VALUES($1, $2) RETURNING id"
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		log.Fatal(err)
@@ -67,7 +62,8 @@ func (t *Todo) create((w http.ResponseWriter, r *http.Request)) (err error) {
 	return
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.ParseFiles("templates/tmpl.html")
-	t.Execute(w, "hello go")
-}
+// func index(w http.ResponseWriter, r *http.Request) {
+// 	t, _ := template.ParseFiles("templates/tmpl.html")
+// 	// ここに処理
+// 	t.Execute(w, "hello go")
+// }
