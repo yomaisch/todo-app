@@ -1,0 +1,9 @@
+{{ define "New" }}
+    {{ template "Header" }}
+        {{ template "Menu" }}
+        <h2>Add Task</h2>
+        <form method="POST" action="create">
+            <label> Task </label><input type="text" name="task" />
+            <input type="submit" value="Add" />
+        </form>
+{{ end }}
