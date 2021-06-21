@@ -13,6 +13,14 @@ type Todo struct {
 	Task string
 }
 
+func main() {
+	http.HandleFunc("/", Index)
+	http.HandleFunc("/new", New)
+	http.HandleFunc("/create", Create)
+	http.HandleFunc("/delete", Delete)
+	http.ListenAndServe("localhost:8080", nil)
+}
+
 func dbConn() (db *sql.DB) {
 	psqlInfo := "host=localhost user=YoshimasaIshino password=yonce dbname=yonce port=5432 sslmode=disable"
 	db, err := sql.Open("postgres", psqlInfo)
@@ -63,9 +71,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 301)
 }
 
-func main() {
-	http.HandleFunc("/", Index)
-	http.HandleFunc("/new", New)
-	http.HandleFunc("/create", Create)
-	http.ListenAndServe("localhost:8080", nil)
+func Delete(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	td := r.URL.Query().Get("id")
+	delForm, err := db.Prepare("DELETE FROM test.todo WHERE id=$1")
+	if err != nil {
+		panic(err.Error())
+	}
+	delForm.Exec(td)
+	http.Redirect(w, r, "/", 301)
 }
