@@ -6,6 +6,7 @@
                 <tr>
                     <td>ID</td>
                     <td>TASK</td>
+                    <td>Edit</td>
                     <td>Press [done] when you finish.</td>
                 </tr>
             </thead>
@@ -14,6 +15,7 @@
                 <tr>
                     <td>{{ .Id }}</td>
                     <td>{{ .Task }}</td>
+                    <td><a href="/edit?id={{ .Id }}">Edit</a></td>
                     <td><a href="/delete?id={{ .Id }}">done</a><td>
                 </tr>
             {{ end }}
