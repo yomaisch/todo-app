@@ -1,0 +1,19 @@
+{{ define "Index" }}
+    <h1>ToDo App</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <td>ID</td>
+                <td>TASK</td>
+            </tr>
+        </thead>
+        <tbody>
+        {{ range . }}
+            <tr>
+                <td>{{ .Id }}</td>
+                <td>{{ .Task }}</td>
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+{{ end }}

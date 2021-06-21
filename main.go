@@ -2,8 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
+	"net/http"
+	"text/template"
 
 	_ "github.com/lib/pq"
 )
@@ -13,57 +14,41 @@ type Todo struct {
 	Task string
 }
 
-// func init() {
-// 	connectdb()
-// }
-
-// func connectdb() (db *sql.DB) {
-// 	psqlInfo := "host=localhost user=YoshimasaIshino password=yonce dbname=yonce port=5432 sslmode=disable"
-// 	db, err := sql.Open("postgres", psqlInfo)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	return db
-// }
-
-func main() {
-	// テンプレートの生成
-	// http.HandleFunc("/", index)
-
-	// if err := http.ListenAndServe(":8080", nil); err != nil {
-	// 	log.Fatal("ListenAndServe:", err)
-	// }
-
-	// 試しにDBにサンプルデータを入れ込む
-	t := Todo{Task: "621"}
-	t.Create()
-}
-
-func (t *Todo) Create() (err error) {
+func dbConn() (db *sql.DB) {
 	psqlInfo := "host=localhost user=YoshimasaIshino password=yonce dbname=yonce port=5432 sslmode=disable"
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
-
-	statement := "INSERT INTO test.todoapp(id, task) VALUES($1, $2) RETURNING id"
-	stmt, err := db.Prepare(statement)
-	if err != nil {
-		log.Fatal(err)
-		fmt.Println(err)
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(t.Task).Scan(&t.Id)
-	if err != nil {
-		log.Fatal(err)
-		fmt.Println(err)
-		return
-	}
-	return
+	return db
 }
 
-// func index(w http.ResponseWriter, r *http.Request) {
-// 	t, _ := template.ParseFiles("templates/tmpl.html")
-// 	// ここに処理
-// 	t.Execute(w, "hello go")
-// }
+var tmpl = template.Must(template.ParseGlob("templates/*")) //ParseGlobは、パターンによってマッチしたファイルのリストを持つParseFilesを呼び出すことと同じ
+
+func Index(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	selDB, err := db.Query("SELECT * FROM test.todoapp ORDER BY id DESC")
+	if err != nil {
+		panic(err.Error())
+	}
+	td := Todo{}
+	res := []Todo{}
+	for selDB.Next() {
+		var id int
+		var task string
+		err = selDB.Scan(&id, &task)
+		if err != nil {
+			panic(err.Error())
+		}
+		td.Id = id
+		td.Task = task
+		res = append(res, td)
+	}
+	tmpl.ExecuteTemplate(w, "Index", res)
+}
+
+func main() {
+	log.Println("Server started on: http://localhost:8080")
+	http.HandleFunc("/", Index)
+	http.ListenAndServe(":8080", nil)
+}
