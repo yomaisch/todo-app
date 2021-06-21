@@ -16,8 +16,10 @@ type Todo struct {
 func main() {
 	http.HandleFunc("/", Index)
 	http.HandleFunc("/new", New)
+	http.HandleFunc("/edit", Edit)
 	http.HandleFunc("/create", Create)
 	http.HandleFunc("/delete", Delete)
+	http.HandleFunc("/update", Update)
 	http.ListenAndServe("localhost:8080", nil)
 }
 
@@ -30,7 +32,8 @@ func dbConn() (db *sql.DB) {
 	return db
 }
 
-var tmpl = template.Must(template.ParseGlob("templates/*")) //ParseGlobは、パターンによってマッチしたファイルのリストを持つParseFilesを呼び出すことと同じ
+//ParseGlobは、パターンによってマッチしたファイルのリストを持つParseFilesを呼び出すことと同義
+var tmpl = template.Must(template.ParseGlob("templates/*"))
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
@@ -38,6 +41,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
+
 	td := Todo{}
 	res := []Todo{}
 	for selDB.Next() {
@@ -58,6 +62,28 @@ func New(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "New", nil)
 }
 
+func Edit(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	uId := r.URL.Query().Get("id")
+	selDB, err := db.Query("SELECT * FROM test.todo WHERE id=$1", uId)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	td := Todo{}
+	for selDB.Next() {
+		var id int
+		var task string
+		err = selDB.Scan(&id, &task)
+		if err != nil {
+			panic(err.Error())
+		}
+		td.Id = id
+		td.Task = task
+	}
+	tmpl.ExecuteTemplate(w, "Edit", td)
+}
+
 func Create(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	if r.Method == "POST" {
@@ -74,10 +100,23 @@ func Create(w http.ResponseWriter, r *http.Request) {
 func Delete(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	td := r.URL.Query().Get("id")
-	delForm, err := db.Prepare("DELETE FROM test.todo WHERE id=$1")
+	delForm, err := db.Prepare("DELETE FROM test.todo WHERE id=$1;")
 	if err != nil {
 		panic(err.Error())
 	}
 	delForm.Exec(td)
+	http.Redirect(w, r, "/", 301)
+}
+
+func Update(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	if r.Method == "POST" {
+		task := r.FormValue("task")
+		udtForm, err := db.Prepare("UPDATE test.todo SET task=$1 WHERE id=$2;")
+		if err != nil {
+			panic(err.Error())
+		}
+		udtForm.Exec(task)
+	}
 	http.Redirect(w, r, "/", 301)
 }
