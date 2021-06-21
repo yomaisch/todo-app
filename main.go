@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 	"text/template"
 
@@ -27,7 +26,7 @@ var tmpl = template.Must(template.ParseGlob("templates/*")) //ParseGlobは、パ
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
-	selDB, err := db.Query("SELECT * FROM test.todoapp ORDER BY id DESC")
+	selDB, err := db.Query("SELECT * FROM test.todo;")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -47,8 +46,26 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "Index", res)
 }
 
+func New(w http.ResponseWriter, r *http.Request) {
+	tmpl.ExecuteTemplate(w, "New", nil)
+}
+
+func Create(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	if r.Method == "POST" {
+		task := r.FormValue("task")
+		crtForm, err := db.Prepare("INSERT INTO test.todo(task) VALUES($1);")
+		if err != nil {
+			panic(err.Error())
+		}
+		crtForm.Exec(task)
+	}
+	http.Redirect(w, r, "/", 301)
+}
+
 func main() {
-	log.Println("Server started on: http://localhost:8080")
 	http.HandleFunc("/", Index)
-	http.ListenAndServe(":8080", nil)
+	http.HandleFunc("/new", New)
+	http.HandleFunc("/create", Create)
+	http.ListenAndServe("localhost:8080", nil)
 }
